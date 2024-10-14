@@ -12,22 +12,13 @@ WIN_HEIGHT = TILE_SIZE * ROWS
 SNAKE_COLOR = "#008000"
 FOOD_COLOR = "#DE3163"
 
+
 class Tile:
     def __init__(self, x, y):
         self.x = x
         self.y = y
         canvas.create_rectangle(x, y, x+TILE_SIZE, y+TILE_SIZE, fill=SNAKE_COLOR)
 
-class Snake:
-    def __init__(self, x, y):
-        body = []
-        head = Tile(x, y)
-        self.head = head
-        self.body = body.append(self.head)
-    def add():
-        pass
-    def move():
-        pass
 
 class Food:
     def __init__(self, x, y):
@@ -35,14 +26,54 @@ class Food:
         self.y = y
         canvas.create_oval(x, y, x+TILE_SIZE, y+TILE_SIZE, fill=FOOD_COLOR)
 
+def move():
+    global snake, snake_body, food, snake_x, snake_y, food_x, food_y, score, game_over
+
+    if (snake_x < 0 or snake_y < 0 or snake_x >= WIN_WIDTH or snake_y >= WIN_HEIGHT):
+        game_over = True
+        return
+
+    if (snake_x == food_x and snake_y == food_y):
+        snake_body.append(Tile(food_x, food_y))
+        food_x, food_y = getPosition()
+        food = Food(food_x,food_y)
+        score += 1
+
+
+    for i in range(len(snake_body)-1, -1, -1):
+        tile = snake_body[i]
+        if (i==0):
+            tile.x = snake.x
+            tile.y = snake.y
+        else:
+            prev_tile = snake_body[i-1]
+            tile.x = prev_tile.x
+            tile.y = prev_tile.y
+
+    snake_x += vel_x * TILE_SIZE
+    snake_y += vel_y * TILE_SIZE
+    
+
+
 
 def getPosition():
         rand_x = random.randrange(0, ROWS-1) * TILE_SIZE
         rand_y = random.randrange(0, COLUMNS-1) * TILE_SIZE
         return rand_x, rand_y
 
+#e = event
 def change_direction(e):
-    print(e.keysym)
+    global vel_x, vel_y
+    if (e.keysym == "Up" and vel_y != 1):
+        vel_x, vel_y = 0, -1
+    elif (e.keysym == "Down" and vel_y != -1):
+        vel_x = 0
+        vel_y = 1
+    elif (e.keysym == "Left" and vel_x != 1):
+        vel_x = -1
+        vel_y = 0
+    elif (e.keysym == "Right" and vel_x != -1):
+        vel_x, vel_y = 1, 0
 
 if __name__ == "__main__":
     window = Tk()
@@ -74,7 +105,7 @@ if __name__ == "__main__":
 
     #initialize snake
     snake_x, snake_y = getPosition()
-    snake = Snake(snake_x, snake_y)
+    snake_body = []
 
     #initialize food
     food_x, food_y = getPosition()
@@ -83,14 +114,35 @@ if __name__ == "__main__":
         food_x, food_y = getPosition()
     food = Food(food_x, food_y)
 
-    #set velocities for keyListener
-    vel_x = ""
-    vel_y = ""
+    vel_x = 0
+    vel_y = 0
+
+    score = 0
+    game_over = False
+
+
+    def draw():
+        global snake, score, game_over
+        move()
+        canvas.delete("all")
+        snake = Tile(snake_x, snake_y)
+        Food(food_x, food_y)
+        for tile in snake_body:
+            canvas.create_rectangle(tile.x, tile.y, tile.x + TILE_SIZE, tile.y + TILE_SIZE, fill =  SNAKE_COLOR)
+        if game_over == True:
+            canvas.create_rectangle(WIN_WIDTH/4, WIN_HEIGHT/4, WIN_WIDTH*3 /4, WIN_HEIGHT*3 /4, fill= 'red')
+            canvas.create_text(WIN_WIDTH/2, WIN_HEIGHT/2, font = "Arial 30", text = f"Game Over. Score: {score}", fill= "black")
+            exit
+        canvas.create_text(50, 30, font = "Arial 20", text = f"Score: {score}", fill = "white")
+        window.after(100, draw)
+
+
+    draw() 
 
     window.bind("<KeyRelease>", change_direction)
 
 
     window.mainloop()
 
-    #messagebox.showinfo(message='Have a good day')
+    
 
